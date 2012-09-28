@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package questionanswering;
 import java.util.*;
 import java.io.*;
 import com.cignoir.cabocha.*;
@@ -28,7 +23,7 @@ public class AnswerType {
     
     //postListは名義変数
     //public static String[] posList = {"名詞", "助詞", "動詞", "連体詞", "接頭詞", "副詞", "感動詞", "記号", "形容詞", "助動詞"};  //一番シンプルな分類
-    public static String[] posList = {"名詞-一般", "名詞-固有名詞", "名詞-代名詞", "名詞-非自立", "名詞-サ変接続", "名詞-形容動詞語幹", "名詞-副詞可能", "名詞-接尾", "名詞-数",
+    public static String[] posList = {"名詞-一般", "名詞-固有名詞", "名詞-代名詞", "名詞-非自立", "名詞-サ変接続", "名詞-形容動詞語幹","名詞-ナイ形容詞語幹", "名詞-副詞可能", "名詞-接尾", "名詞-数",
 		 "助詞-係助詞", "助詞-格助詞", "助詞-副助詞", "助詞-連体化","助詞-副詞化", "助詞-並立助詞", "助詞-終助詞", "助詞-接続助詞", "助詞-副助詞／並立助詞／終助詞",
 		 "動詞-自立", "動詞-非自立", "動詞-接尾",
 		 "連体詞-*",  //これ以上細分化できない
@@ -38,12 +33,14 @@ public class AnswerType {
 		 "記号-一般","記号-括弧開","記号-括弧閉","記号-読点",
 		 "形容詞-自立","形容詞-非自立",
 		 "助動詞-*"};  //これ以上細分化できない
- 
+   
+    
+    
     //ansTypeは名義変数
-    public static String[] ansType = {"FACT/NAME", "FACT/SIZE", "FACT/LOC", "FACT/DATE", "FACT/PER", "FACT/ORG", "WHY", "HOW", "DEFINITION"};
+    public static String[] ansType = {"FACT/NAME", "FACT/SIZE", "FACT/LOC", "FACT/DATE", "FACT/PER", "FACT/ORG"};//, "WHY", "HOW", "DEFINITION"};
     
     //questionWordsはInteger型
-    public static String[] questionWords = {"いつ","どこ","誰","何","わけ","理由","原因","方法","定義","数","名前","中","どっち","どれ","いくつ","なぜ","どうして","どう","どの","で","と","の","は","に","か","について","い","つ","が","方","名","物","もの","者","人","作者","名称","県","国","くらい"};
+    public static String[] questionWords = {"いつ","どこ","誰","何","わけ","理由","原因","方法","定義","数","名前","中","どっち","どれ","いくつ","一番","いちばん","なぜ","どうして","どう","どの","で","と","の","は","に","か","について","い","つ","が","方","名","物","もの","者","人","約","呼ぶ","作者","名称","県","国","都市","著者","最","くらい","さ","れ","る","し","た","およそ"};
     
     public int DetectAnswerType(String question){
         
@@ -78,7 +75,13 @@ public class AnswerType {
 			 arfffile_template = arfffile_template + posList[i] + ",";
 		 }
                  arfffile_template = arfffile_template + posList[posList.length-1] + "}\r\n";  //終了
-		 
+        
+         /*  morph_len -Integer型, 形態素の長さ- */
+         arfffile_template = arfffile_template + "@attribute morph_len integer\r\n";  //開始
+	 
+	 /*  string_len -Integer型, 質問文の文字数- */
+         arfffile_template = arfffile_template + "@attribute string_len integer\r\n";  //開始
+	 
 	 /*  anstype -名義変数, 回答タイプ- */
 	  arfffile_template = arfffile_template + "@attribute anstype{";  //開始
 		 for(int i=0;i<ansType.length-1;i++){
@@ -143,12 +146,10 @@ public class AnswerType {
 		for(int j=0;j<stc.getChunks().get(i).getTokens().size();j++){
 		  tokens_surface.add(stc.getChunks().get(i).getTokens().get(j).getSurface());     //前から順番に形態素の表層文字列を格納
 		  if(!stc.getChunks().get(i).getTokens().get(j).getPos().contains("?")){
-			  String pos = stc.getChunks().get(i).getTokens().get(j).getPos();
+			String pos = stc.getChunks().get(i).getTokens().get(j).getPos();
+			String pos_second = pos.substring(0,pos.lastIndexOf("-"));
+			tokens_pos.add(pos_second);    //前から順番に形態素の品詞を格納
 			  
-			  //String pos_first = pos.substring(0,pos.indexOf("-"));
-			  String pos_second = pos.substring(0,pos.lastIndexOf("-"));
-			  System.out.println(pos_second);
-		          tokens_pos.add(pos_second);    //前から順番に形態素の品詞を格納
 		  }
 		  //System.out.print(stc.getChunks().get(i).getTokens().get(j).getSurface()+",");
 		}
@@ -181,6 +182,11 @@ public class AnswerType {
 	/* 後ろから2番目の形態素の品詞 */
 	outputfeatures.add(tokens_pos.get(tokens_pos.size()-2));
 	
+	/* 質問文の形態素の長さ */
+	outputfeatures.add(Integer.toString(tokens_pos.size()));
+	
+	/* 質問文の文字列の長さ */
+	outputfeatures.add(Integer.toString(question.length()));
 	
 	return outputfeatures;
     }    
